@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SabanaTech · Corte 2</title>
+<meta name="description" content="Presentación interactiva del segundo corte: VLSM, VLANs, trunks, inter-VLAN, OSPF e IPv6 dual-stack en GNS3.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050b14; --bg2:#0a1626; --panel:rgba(12,28,48,.72); --line:rgba(80,200,255,.22);
+  --cyan:#3de2ff; --mag:#ff3df0; --lime:#9dff5b; --amber:#ffb63d; --red:#ff4d6d; --txt:#dff3ff; --mut:#7fa4bd;
+  --glow:0 0 18px rgba(61,226,255,.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(1200px 700px at 80% -10%,#0d2a4a 0%,transparent 60%),radial-gradient(900px 600px at -10% 110%,#2a0d3f 0%,transparent 55%),var(--bg);
+  color:var(--txt);font-family:'Rajdhani',system-ui,sans-serif;font-size:18px;overflow:hidden}
+#grid{position:fixed;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:60px 60px;opacity:.13;mask-image:radial-gradient(circle at 50% 40%,#000 20%,transparent 75%);pointer-events:none}
+#fx{position:fixed;inset:0;pointer-events:none;opacity:.55}
+header{position:fixed;top:0;left:0;right:0;height:58px;display:flex;align-items:center;gap:18px;padding:0 22px;z-index:20;
+  background:linear-gradient(#050b14ee,#050b1400);}
+.brand{font-family:Orbitron;font-weight:900;letter-spacing:.18em;font-size:14px;color:var(--cyan);text-shadow:var(--glow);white-space:nowrap}
+.brand b{color:var(--mag)}
+#dots{display:flex;gap:7px;flex:1;justify-content:center;flex-wrap:wrap}
+#dots button{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--mut);
+  font:600 11px 'JetBrains Mono';cursor:pointer;transition:.25s}
+#dots button:hover{border-color:var(--cyan);color:var(--cyan)}
+#dots button.on{background:var(--cyan);color:#001018;border-color:var(--cyan);box-shadow:var(--glow)}
+#dots button.done{border-color:var(--lime);color:var(--lime)}
+#prog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--cyan),var(--mag));z-index:30;transition:width .5s;box-shadow:var(--glow)}
+main{position:absolute;inset:58px 0 62px 0}
+.scene{position:absolute;inset:0;padding:10px 34px 8px;display:none;grid-template-columns:minmax(300px,.85fr) 1.35fr;gap:26px;overflow:auto;animation:in .55s ease both}
+.scene.on{display:grid}
+@keyframes in{from{opacity:0;transform:translateY(16px) scale(.99)}to{opacity:1;transform:none}}
+.kick{font:600 12px 'JetBrains Mono';color:var(--mag);letter-spacing:.3em;text-transform:uppercase;margin-bottom:8px}
+h1,h2{font-family:Orbitron;font-weight:700;line-height:1.12;margin-bottom:14px;background:linear-gradient(100deg,#fff,var(--cyan) 60%,var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:clamp(24px,2.7vw,40px)}
+h1{font-size:clamp(34px,5vw,74px);line-height:1.02}
+p{color:var(--txt);line-height:1.5;margin-bottom:12px}
+p.m{color:var(--mut)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;backdrop-filter:blur(8px);position:relative}
+.panel::before{content:"";position:absolute;left:-1px;top:14px;bottom:14px;width:3px;background:linear-gradient(var(--cyan),var(--mag));border-radius:3px}
+.tag{display:inline-block;font:600 12px 'JetBrains Mono';padding:3px 9px;border:1px solid var(--line);border-radius:20px;color:var(--cyan);margin:0 6px 6px 0}
+.tag.ok{color:var(--lime);border-color:#4f9a2c}.tag.bad{color:var(--red);border-color:#a13148}.tag.am{color:var(--amber);border-color:#9a6d1c}
+.mono{font-family:'JetBrains Mono',monospace;font-size:14px}
+.btn{font:600 13px Orbitron;letter-spacing:.1em;color:var(--cyan);background:transparent;border:1px solid var(--cyan);border-radius:8px;padding:9px 15px;cursor:pointer;margin:0 8px 8px 0;transition:.2s}
+.btn:hover{background:var(--cyan);color:#001018;box-shadow:var(--glow)}
+.btn.mag{color:var(--mag);border-color:var(--mag)}.btn.mag:hover{background:var(--mag);color:#1a0016;box-shadow:0 0 18px rgba(255,61,240,.5)}
+.btn.red{color:var(--red);border-color:var(--red)}.btn.red:hover{background:var(--red);color:#1a0008}
+.right{display:flex;flex-direction:column;gap:12px;min-width:0}
+ul.chk{list-style:none}
+ul.chk li{padding:8px 10px;border:1px solid transparent;border-radius:8px;cursor:pointer;transition:.2s;display:flex;gap:10px;align-items:center}
+ul.chk li:hover{border-color:var(--line);background:rgba(61,226,255,.06)}
+ul.chk li::before{content:"◇";color:var(--mag);font-size:14px}
+ul.chk li.on::before{content:"◆";color:var(--lime);text-shadow:0 0 10px var(--lime)}
+ul.chk li small{color:var(--mut);display:block;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{font:600 11px 'JetBrains Mono';letter-spacing:.14em;color:var(--mag);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);text-transform:uppercase}
+td{padding:7px 8px;border-bottom:1px solid rgba(80,200,255,.08)}
+tr.row{cursor:pointer;transition:.15s}tr.row:hover td,tr.row.on td{background:rgba(61,226,255,.09)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vl{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.vc{border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;transition:.25s;background:rgba(6,16,30,.6)}
+.vc:hover,.vc.on{transform:translateY(-3px);border-color:var(--c,var(--cyan));box-shadow:0 0 22px color-mix(in srgb,var(--c,var(--cyan)) 40%,transparent)}
+.vc b{font-family:Orbitron;font-size:24px;color:var(--c,var(--cyan))}
+.vc span{display:block;font-size:14px;color:var(--mut)}
+#vsm{display:flex;height:64px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+#vsm div{display:flex;align-items:center;justify-content:center;font:600 11px 'JetBrains Mono';color:#001018;cursor:pointer;border-right:1px solid #05101c;transition:.2s;min-width:0;overflow:hidden}
+#vsm div:hover,#vsm div.on{filter:brightness(1.25);transform:scaleY(1.09)}
+input[type=text]{background:rgba(6,16,30,.8);border:1px solid var(--line);color:var(--cyan);border-radius:8px;padding:9px 12px;font:600 15px 'JetBrains Mono';width:100%}
+input:focus{outline:none;border-color:var(--cyan);box-shadow:var(--glow)}
+svg text{font-family:'JetBrains Mono',monospace}
+#topo{width:100%;height:auto;max-height:100%}
+.node{cursor:pointer;transition:.2s}.node:hover rect,.node.sel rect{stroke-width:3;filter:drop-shadow(0 0 8px currentColor)}
+.edge{stroke:#2b5570;stroke-width:2.4;fill:none;transition:.3s}
+.edge.trunk{stroke:var(--amber)}.edge.rt{stroke:var(--cyan)}.edge.dead{stroke:var(--red);stroke-dasharray:6 6;opacity:.7}
+.edge.hot{stroke:var(--lime);stroke-width:4;filter:drop-shadow(0 0 6px var(--lime))}
+.pk{fill:var(--mag);filter:drop-shadow(0 0 8px var(--mag))}
+.info{min-height:78px}
+.term{background:#020710;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:13.5px/1.55 'JetBrains Mono',monospace;color:#b8f5ff;white-space:pre-wrap;overflow:auto;max-height:230px}
+.term .g{color:var(--lime)}.term .r{color:var(--red)}.term .a{color:var(--amber)}.term .m{color:var(--mut)}
+.bits{display:flex;gap:4px;flex-wrap:wrap}
+.bx{font:600 14px 'JetBrains Mono';padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:rgba(6,16,30,.7);transition:.4s}
+.bx.hi{border-color:var(--mag);color:var(--mag);box-shadow:0 0 12px rgba(255,61,240,.4)}
+.bx.gr{border-color:var(--lime);color:var(--lime)}
+footer{position:fixed;left:0;right:0;bottom:0;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:20;
+  background:linear-gradient(#050b1400,#050b14f2)}
+footer .hint{font:12px 'JetBrains Mono';color:var(--mut)}
+footer .nav button{font:700 13px Orbitron;letter-spacing:.1em;color:var(--cyan);background:rgba(10,30,50,.7);border:1px solid var(--cyan);border-radius:8px;padding:11px 22px;margin-left:10px;cursor:pointer;transition:.2s}
+footer .nav button:hover{background:var(--cyan);color:#001018;box-shadow:var(--glow)}
+.big{font-family:Orbitron;font-weight:900;font-size:clamp(46px,7vw,96px);line-height:1;color:var(--lime);text-shadow:0 0 30px rgba(157,255,91,.4)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font:12px 'JetBrains Mono';color:var(--mut)}
+.leg i{display:inline-block;width:22px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+@media(max-width:900px){.scene{grid-template-columns:1fr;padding:10px 16px}.vl{grid-template-columns:repeat(2,1fr)}body{font-size:16px}#dots{display:none}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas><div id="grid"></div><div id="prog"></div>
+<header><div class="brand">SABANA<b>TECH</b> // CORTE 2</div><div id="dots"></div></header>
+<main id="main"></main>
+<footer><div class="hint">← → navegar · clic en cualquier elemento para explorar</div><div class="nav"><button id="prev">◀ ANTERIOR</button><button id="next">SIGUIENTE ▶</button></div></footer>
+
+<script>
+/* ============ DATOS ============ */
+const VLANS=[
+ {id:10,n:'ADMIN',net:'10.10.0.96',p:27,gw:'R-DIST1',v6:'2001:db8:acad:10::/64',who:'Management + Finance & HR',why:'Comparten VLAN: mismas funciones administrativas',c:'#3de2ff'},
+ {id:20,n:'DESARROLLO',net:'10.10.0.64',p:27,gw:'R-DIST2',v6:'2001:db8:acad:20::/64',who:'Software Development (18)',why:'Propia: es el área más grande',c:'#9dff5b'},
+ {id:30,n:'COMERCIAL',net:'10.10.0.160',p:28,gw:'R-DIST1',who:'Commercial & Customer Service',why:'Propia: atiende clientes externos',c:'#ffb63d'},
+ {id:40,n:'TI',net:'10.10.0.176',p:28,gw:'R-DIST2',who:'IT & Infrastructure',why:'Propia: administra los equipos de red',c:'#ff3df0'},
+ {id:50,n:'SERVIDORES',net:'10.10.0.192',p:28,gw:'R-DIST2',who:'Servidores internos',why:'Red dedicada: recurso compartido',c:'#ff4d6d'},
+ {id:60,n:'COMUN',net:'10.10.0.208',p:28,gw:'R-DIST1',who:'Áreas comunes + impresoras',why:'Red dedicada: recurso compartido',c:'#5bb8ff'},
+ {id:70,n:'WIFI-CORP',net:'10.10.0.0',p:26,gw:'R-DIST2',who:'Wi-Fi de empleados',why:'Propia: el AP se representa como VLAN',c:'#b48cff'},
+ {id:80,n:'INVITADOS',net:'10.10.0.128',p:27,gw:'R-DIST1',who:'Wi-Fi de invitados',why:'Propia y aislada por firewall',c:'#ff8f5b'}];
+const ip2n=s=>s.split('.').reduce((a,b)=>a*256+ +b,0)>>>0, n2ip=n=>[n>>>24,n>>>16&255,n>>>8&255,n&255].join('.');
+function calc(ip,p){const m=p===0?0:(0xFFFFFFFF<<(32-p))>>>0,a=ip2n(ip),net=(a&m)>>>0,bc=(net|(~m>>>0))>>>0;
+ return {net:n2ip(net),mask:n2ip(m),first:p>=31?n2ip(net):n2ip(net+1),last:p>=31?n2ip(bc):n2ip(bc-1),bc:n2ip(bc),hosts:p>=31?0:Math.pow(2,32-p)-2,bits:(m>>>0).toString(2).padStart(32,'0'),abits:a.toString(2).padStart(32,'0')}}
+const BLOCKS=[...VLANS].sort((a,b)=>ip2n(a.net)-ip2n(b.net)).map(v=>({l:'VLAN '+v.id+' '+v.n,net:v.net,p:v.p,c:v.c,gw:n2ip(ip2n(v.net)+1)}));
+BLOCKS.push({l:'Enlace CORE↔DIST1',net:'10.10.0.224',p:30,c:'#2b5570'},{l:'Enlace CORE↔DIST2',net:'10.10.0.228',p:30,c:'#2b5570'},{l:'Enlace DIST1↔DIST2',net:'10.10.0.232',p:30,c:'#2b5570'},{l:'Libre',net:'10.10.0.236',p:26,c:'#16283a',free:true});
+/* topologia */
+const N={
+ core:{x:500,y:58,t:'r',l:'R-CORE',i:'Router de núcleo. Sin LANs: solo une a los dos routers de distribución con enlaces /30 y anuncia todo por OSPF.',ips:['eth0 10.10.0.225/30 · 2001:db8:acad:101::1','eth1 10.10.0.229/30 · 2001:db8:acad:102::1'],rid:'1.1.1.1'},
+ d1:{x:190,y:190,t:'r',l:'R-DIST1',i:'Distribución 1. Gateway de las VLAN 10, 30, 60 y 80 (subinterfaces eth0.X). Aquí está la regla de firewall que aísla INVITADOS.',ips:['eth0.10 10.10.0.97/27 · v6 :10::1','eth0.30 10.10.0.161/28','eth0.60 10.10.0.209/28','eth0.80 10.10.0.129/27','eth1 10.10.0.226/30','eth2 10.10.0.233/30'],rid:'2.2.2.2'},
+ d2:{x:810,y:190,t:'r',l:'R-DIST2',i:'Distribución 2. Gateway de las VLAN 20, 40, 50 y 70.',ips:['eth0.20 10.10.0.65/27 · v6 :20::1','eth0.40 10.10.0.177/28','eth0.50 10.10.0.193/28','eth0.70 10.10.0.1/26','eth1 10.10.0.230/30','eth2 10.10.0.234/30'],rid:'3.3.3.3'},
+ a1:{x:190,y:330,t:'s',l:'ASW-1',i:'Switch de acceso 1. Trunk 802.1Q hacia R-DIST1 (p0) y hacia ASW-2 (p1). Puertos de acceso p2–p6.',ips:['p2 VLAN10 · p3 VLAN30 · p4 VLAN60','p5 VLAN80 · p6 VLAN70']},
+ a2:{x:810,y:330,t:'s',l:'ASW-2',i:'Switch de acceso 2. Trunk hacia R-DIST2 (p0) y hacia ASW-1 (p1). Puertos de acceso p2–p5.',ips:['p2 VLAN20 · p3 VLAN40','p4 VLAN50 · p5 VLAN70']}};
+const H1=[['pa','PC-ADMIN','10.10.0.98/27','VLAN 10',50],['pc','PC-COM','10.10.0.162/28','VLAN 30',130],['im','IMPRESORA','10.10.0.210/28','VLAN 60',210],['wi','WIFI-INV','10.10.0.130/27','VLAN 80',290],['w1','WIFI-CORP-1','10.10.0.2/26','VLAN 70',370]];
+const H2=[['pd','PC-DEV','10.10.0.66/27','VLAN 20',640],['pt','PC-TI','10.10.0.178/28','VLAN 40',740],['sv','SRV','10.10.0.194/28','VLAN 50',840],['w2','WIFI-CORP-2','10.10.0.3/26','VLAN 70',940]];
+H1.forEach(h=>N[h[0]]={x:h[4],y:470,t:'h',l:h[1],i:'Host VPCS en '+h[3]+'.',ips:[h[2]],p:'a1'});
+H2.forEach(h=>N[h[0]]={x:h[4],y:470,t:'h',l:h[1],i:'Host VPCS en '+h[3]+'.',ips:[h[2]],p:'a2'});
+const E=[['core','d1','rt','c1'],['core','d2','rt','c2'],['d1','d2','rt','dd'],['d1','a1','trunk'],['d2','a2','trunk'],['a1','a2','trunk']].concat(H1.map(h=>['a1',h[0],'acc'])).concat(H2.map(h=>['a2',h[0],'acc']));
+
+/* ============ ESCENAS ============ */
+const S=[];
+S.push({k:'PROYECTO · SEGUNDO CORTE',t:'SabanaTech<br>Solutions SAS',
+ L:`<p>Evolución de la red de Bogotá (≈ 50 empleados) hacia una red <b>segmentada, enrutada dinámicamente y lista para IPv6</b>.</p>
+ <p class="m">Implementada y probada en GNS3 con VyOS. Todo lo que verás aquí corrió de verdad; puedes tocar cada pieza.</p>
+ <div><span class="tag">VLSM</span><span class="tag">VLANs</span><span class="tag">802.1Q</span><span class="tag">Inter-VLAN</span><span class="tag">OSPFv2/v3</span><span class="tag">IPv6 dual-stack</span></div>`,
+ R:()=>`<div class="panel"><div class="kick">Qué pide el segundo corte — toca para marcar</div><ul class="chk" id="req">
+ ${[['VLSM','Direccionamiento IPv4 estructurado'],['VLANs','Segmentación justificada'],['Trunks 802.1Q','Entre switches y hacia routers'],['Inter-VLAN','Un gateway por VLAN'],['3 routers de capa 3','Más de un dispositivo L3'],['OSPF','Enrutamiento dinámico'],['IPv6 + dual-stack','Mínimo 2 áreas en redes distintas'],['GNS3','Plataforma de implementación']].map(x=>`<li onclick="this.classList.toggle('on')"><div><b>${x[0]}</b><small>${x[1]}</small></div></li>`).join('')}</ul></div>`,
+ init(){document.querySelectorAll('#req li').forEach((li,i)=>setTimeout(()=>li.classList.add('on'),700+i*380))}});
+
+S.push({k:'01 · SEGMENTACIÓN',t:'8 VLANs y por qué',
+ L:`<p>La sesión 13 pregunta si invitados, finanzas, gerencia y desarrollo pueden compartir un segmento lógico. <b>No.</b></p>
+ <p class="m">Solo las dos áreas administrativas comparten VLAN: mismas funciones, y separarlas gastaría un bloque y una VLAN sin ganar aislamiento útil.</p>
+ <div class="panel info" id="vi"><div class="kick">Toca una VLAN</div>Cada VLAN es un dominio de broadcast independiente.</div>`,
+ R:()=>`<div class="vl">${VLANS.map((v,i)=>`<div class="vc" style="--c:${v.c}" data-i="${i}"><b>${v.id}</b><span>${v.n}</span></div>`).join('')}</div>
+ <div class="panel"><table><tr><th>VLAN</th><th>Quién</th><th>Decisión</th></tr>${VLANS.map((v,i)=>`<tr class="row" data-i="${i}"><td style="color:${v.c}"><b>${v.id} ${v.n}</b></td><td>${v.who}</td><td>${v.why}</td></tr>`).join('')}</table></div>`,
+ init(){const f=i=>{const v=VLANS[i];document.querySelectorAll('.vc,tr.row').forEach(e=>e.classList.toggle('on',e.dataset.i==i));
+  document.getElementById('vi').innerHTML=`<div class="kick">VLAN ${v.id} · ${v.n}</div><p><b>${v.who}</b></p><p class="m">${v.why}</p><span class="tag">Gateway: ${v.gw}</span><span class="tag">${v.net}/${v.p}</span>${v.v6?`<span class="tag ok">IPv6 ${v.v6}</span>`:''}`};
+  document.querySelectorAll('.vc,tr.row').forEach(e=>e.onclick=()=>f(e.dataset.i))}});
+
+S.push({k:'02 · DIRECCIONAMIENTO',t:'VLSM sobre<br>10.10.0.0/24',
+ L:`<p>Se ordena de <b>mayor a menor</b> y cada bloque es el más pequeño que cabe (regla de la sesión 9). Cada tamaño incluye +30 % de crecimiento y 1 dirección para el gateway.</p>
+ <p class="m">El bloque sale del ejercicio 3 de la sesión 9: el 10.10.0.0/22 se divide en 4 sedes iguales y a Bogotá le toca el primer /24.</p>
+ <div class="panel"><div class="kick">Calculadora — escribe IP/prefijo</div><input type="text" id="ci" value="10.10.0.98/27"><div class="term" id="co" style="margin-top:10px;max-height:190px"></div></div>`,
+ R:()=>`<div class="panel"><div class="kick">Toca un bloque de la barra (a escala del /24)</div><div id="vsm">${BLOCKS.map((b,i)=>`<div data-i="${i}" style="flex:${Math.pow(2,32-b.p)};background:${b.c}" title="${b.l}">${Math.pow(2,32-b.p)>=32?(b.l.startsWith('VLAN')?b.l.split(' ')[1]:''):''}</div>`).join('')}</div>
+ <div class="term" id="vd" style="margin-top:12px;max-height:150px">Selecciona un bloque para ver red, máscara, rango y broadcast.</div></div>
+ <div class="panel"><table><tr><th>Red</th><th>Uso</th><th>Gateway</th><th>Hosts</th></tr>${BLOCKS.filter(b=>!b.free).map((b,i)=>`<tr class="row" data-i="${i}"><td class="mono">${b.net}/${b.p}</td><td>${b.l}</td><td class="mono">${b.gw||'—'}</td><td>${Math.pow(2,32-b.p)-2}</td></tr>`).join('')}</table></div>`,
+ init(){const show=i=>{const b=BLOCKS[i],r=calc(b.net,b.p);document.querySelectorAll('#vsm div').forEach((d,k)=>d.classList.toggle('on',k==i));
+  document.getElementById('vd').innerHTML=`<span class="g">${b.l}</span>\nRed        ${r.net}/${b.p}\nMáscara    ${r.mask}\nPrimero    ${r.first}\nÚltimo     ${r.last}\nBroadcast  ${r.bc}\nHosts      ${r.hosts}`};
+  document.querySelectorAll('#vsm div').forEach(d=>d.onclick=()=>show(d.dataset.i));document.querySelectorAll('tr.row').forEach(r=>r.onclick=()=>show(r.dataset.i));
+  const upd=()=>{const m=document.getElementById('ci').value.trim().match(/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/);const o=document.getElementById('co');if(!m){o.innerHTML='<span class="r">Formato: 10.10.0.98/27</span>';return}
+   const r=calc(m[1],+m[2]);const hl=(s,p)=>s.slice(0,p)+'<span class="a">'+s.slice(p)+'</span>';const dot=s=>s.match(/.{8}/g).join('.');
+   o.innerHTML=`<span class="m">IP    </span>${dot(hl(r.abits,+m[2]).replace(/<[^>]+>/g,''))}\n<span class="m">Masc. </span>${dot(r.bits)}\n\nRed        <span class="g">${r.net}</span>\nMáscara    ${r.mask}\nRango      ${r.first} – ${r.last}\nBroadcast  ${r.bc}\nHosts      ${r.hosts}`};
+  document.getElementById('ci').oninput=upd;upd();show(0)}});
+
+/* ---- topologia helper ---- */
+function topoSVG(){
+ let s=`<svg id="topo" viewBox="0 0 1000 540">`;
+ E.forEach(e=>{const a=N[e[0]],b=N[e[1]];s+=`<line class="edge ${e[2]}" id="e_${e[0]}_${e[1]}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`});
+ Object.entries(N).forEach(([k,n])=>{const w=n.t==='h'?86:110,h=n.t==='h'?30:40;const col=n.t==='r'?'#3de2ff':n.t==='s'?'#ffb63d':'#9dff5b';
+  s+=`<g class="node" data-k="${k}" style="color:${col}"><rect x="${n.x-w/2}" y="${n.y-h/2}" width="${w}" height="${h}" rx="8" fill="#08182b" stroke="${col}" stroke-width="1.8"/><text x="${n.x}" y="${n.y+4}" text-anchor="middle" fill="${col}" font-size="${n.t==='h'?10.5:14}" font-weight="600">${n.l}</text></g>`});
+ s+=`<circle class="pk" id="pk" r="7" cx="-20" cy="-20"/></svg>`;return s}
+function nodeInfo(k,box){const n=N[k];document.querySelectorAll('.node').forEach(g=>g.classList.toggle('sel',g.dataset.k===k));
+ document.getElementById(box).innerHTML=`<div class="kick">${n.l}${n.rid?' · Router ID '+n.rid:''}</div><p>${n.i}</p>${n.ips.map(x=>`<div class="mono" style="color:var(--cyan)">${x}</div>`).join('')}`}
+function wireNodes(box){document.querySelectorAll('.node').forEach(g=>g.onclick=()=>nodeInfo(g.dataset.k,box))}
+function pathPts(keys){return keys.map(k=>[N[k].x,N[k].y])}
+function animate(keys,dur,cb){const pts=pathPts(keys),pk=document.querySelector('.scene.on #pk');if(!pk)return;let seg=0,t0=null;const len=[];let tot=0;for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);len.push(d);tot+=d}
+ const step=ts=>{if(!t0)t0=ts;let f=Math.min(1,(ts-t0)/dur),d=f*tot,i=0;while(i<len.length-1&&d>len[i]){d-=len[i];i++}const a=pts[i],b=pts[i+1],u=d/len[i];pk.setAttribute('cx',a[0]+(b[0]-a[0])*u);pk.setAttribute('cy',a[1]+(b[1]-a[1])*u);if(f<1)requestAnimationFrame(step);else{setTimeout(()=>{pk.setAttribute('cx',-20)},500);cb&&cb()}};requestAnimationFrame(step)}
+function hot(keys,on){for(let i=1;i<keys.length;i++){const el=document.querySelector('.scene.on #e_'+keys[i-1]+'_'+keys[i])||document.querySelector('.scene.on #e_'+keys[i]+'_'+keys[i-1]);if(el)el.classList.toggle('hot',on)}}
+
+S.push({k:'03 · TOPOLOGÍA',t:'Lo que corre<br>en GNS3',
+ L:`<p><b>3 routers VyOS</b> (núcleo + 2 distribución), <b>2 switches</b> y <b>9 hosts</b>: uno por VLAN y dos en WIFI-CORP para probar la VLAN que cruza switches.</p>
+ <p class="m">Es lo mínimo que cumple «múltiples dispositivos L3» y «más de un switch», y el portátil tiene 7.8 GB de RAM.</p>
+ <div class="leg"><span><i style="background:#3de2ff"></i>enlace enrutado /30</span><span><i style="background:#ffb63d"></i>trunk 802.1Q</span><span><i style="background:#2b5570"></i>acceso</span></div>
+ <div class="panel info" id="ni" style="margin-top:12px"><div class="kick">Toca un equipo</div>Verás su papel y sus direcciones.</div>`,
+ R:()=>`<div class="panel">${topoSVG()}</div>`,init(){wireNodes('ni')}});
+
+S.push({k:'04 · CAPA 2',t:'Switching<br>y trunks',
+ L:`<p>Los <b>puertos de acceso</b> pertenecen a una sola VLAN: el host no entiende 802.1Q. Los <b>trunks</b> llevan varias VLANs por un cable usando la etiqueta 802.1Q (VLAN ID de 12 bits).</p>
+ <p class="m">T3 lleva la VLAN 70 porque el Wi-Fi corporativo cubre los dos pisos y su gateway está en R-DIST2. Límite honesto: los switches de GNS3 no filtran VLANs por trunk, así que la lista es el diseño.</p>
+ <div class="panel info" id="ti"><div class="kick">Toca un trunk o una VLAN</div></div>`,
+ R:()=>`<div class="grid2">${[['T1','R-DIST1 ↔ ASW-1',[10,30,60,80]],['T2','R-DIST2 ↔ ASW-2',[20,40,50,70]],['T3','ASW-1 ↔ ASW-2',[70]]].map(t=>`<div class="panel vc" data-t="${t[0]}" style="--c:#ffb63d"><b>${t[0]}</b><span>${t[1]}</span><div class="mono" style="color:var(--amber);margin-top:6px">VLAN ${t[2].join(' · ')}</div></div>`).join('')}
+ <div class="panel"><div class="kick">Formato de la trama 802.1Q</div><div class="bits"><span class="bx">MAC dst</span><span class="bx">MAC org</span><span class="bx hi">TAG 802.1Q · VLAN ID 12 bits</span><span class="bx">Tipo</span><span class="bx">Datos</span></div></div></div>
+ <div class="panel"><table><tr><th>ASW-1</th><th>VLAN</th><th>Host</th><th>ASW-2</th><th>VLAN</th><th>Host</th></tr>
+ <tr><td>p2</td><td>10</td><td>PC-ADMIN</td><td>p2</td><td>20</td><td>PC-DEV</td></tr><tr><td>p3</td><td>30</td><td>PC-COM</td><td>p3</td><td>40</td><td>PC-TI</td></tr>
+ <tr><td>p4</td><td>60</td><td>IMPRESORA</td><td>p4</td><td>50</td><td>SRV</td></tr><tr><td>p5</td><td>80</td><td>WIFI-INV</td><td>p5</td><td>70</td><td>WIFI-CORP-2</td></tr><tr><td>p6</td><td>70</td><td>WIFI-CORP-1</td><td></td><td></td><td></td></tr></table></div>`,
+ init(){const txt={T1:'Lleva las VLAN 10, 30, 60 y 80 entre ASW-1 y su gateway R-DIST1. Sin trunk, harían falta 4 cables.',T2:'Lleva las VLAN 20, 40, 50 y 70 entre ASW-2 y R-DIST2.',T3:'Une los dos switches para la VLAN 70: WIFI-CORP-1 (piso de ASW-1) llega a su gateway en R-DIST2 por aquí. Prueba T05/T06.'};
+  document.querySelectorAll('[data-t]').forEach(e=>e.onclick=()=>{document.querySelectorAll('[data-t]').forEach(x=>x.classList.remove('on'));e.classList.add('on');document.getElementById('ti').innerHTML=`<div class="kick">Trunk ${e.dataset.t}</div><p>${txt[e.dataset.t]}</p>`})}});
+
+S.push({k:'05 · CAPA 3',t:'Enrutamiento<br>inter-VLAN',
+ L:`<p>Cada VLAN es una <b>subinterfaz 802.1Q</b> (<span class="mono">eth0.10</span>, <span class="mono">eth0.20</span>…) del router. El router es el gateway y la <b>frontera de capa 3</b>.</p>
+ <p class="m">Lanza un paquete de PC-ADMIN (VLAN 10) a PC-DEV (VLAN 20): sube por el trunk, cruza el router y baja por la otra VLAN. Es la prueba T03.</p>
+ <button class="btn" id="go">▶ LANZAR PING PC-ADMIN → PC-DEV</button><div class="term" id="pt" style="margin-top:6px">Esperando…</div>`,
+ R:()=>`<div class="panel">${topoSVG()}</div>`,
+ init(){wireNodes('pt');const path=['pa','a1','d1','d2','a2','pd'];document.getElementById('go').onclick=()=>{hot(path,true);document.getElementById('pt').innerHTML='<span class="m">PC-ADMIN 10.10.0.98 → 10.10.0.66</span>\n1  ASW-1  (trunk 802.1Q, etiqueta VLAN 10)\n2  R-DIST1 eth0.10 recibe · decide por tabla de rutas OSPF\n3  R-DIST2 (enlace directo 10.10.0.233 → .234)\n4  ASW-2  (etiqueta VLAN 20) → PC-DEV\n\n<span class="g">3/3 respuestas · TTL 62</span>';animate(path,2600,()=>hot(path,false))}}});
+
+S.push({k:'06 · ENRUTAMIENTO DINÁMICO',t:'OSPF y<br>convergencia',
+ L:`<p><b>OSPFv2 área 0</b>, router-IDs 1.1.1.1 / 2.2.2.2 / 3.3.3.3. Con 3 routers no hace falta más de un área. Cada uno anuncia sus redes conectadas.</p>
+ <p class="m">Corta el enlace directo R-DIST1 ↔ R-DIST2 y mira cómo OSPF encuentra el camino por R-CORE <b>sin tocar ninguna ruta</b>.</p>
+ <button class="btn red" id="cut">✂ CORTAR ENLACE DIST1↔DIST2</button><button class="btn" id="rest">↺ RESTAURAR</button>
+ <div class="term" id="ot"></div>`,
+ R:()=>`<div class="panel">${topoSVG()}</div>`,
+ init(){wireNodes('ot');const show=(dead)=>{const e=document.querySelector('.scene.on #e_d1_d2');e.classList.toggle('dead',dead);
+   document.getElementById('ot').innerHTML=dead?
+`<span class="r">Enlace caído</span> · vecinos de R-DIST2: solo 1.1.1.1 (R-CORE)
+S>O 10.10.0.96/27 [110/<span class="a">3</span>] via 10.10.0.229, eth1   <span class="m">← por R-CORE</span>
+traceroute → 3 saltos · ping <span class="g">5/5 · TTL 61</span>`:
+`<span class="g">Enlace activo</span> · vecinos de R-DIST2: 1.1.1.1 y 2.2.2.2 (Full)
+O>* 10.10.0.96/27 [110/<span class="a">2</span>] via 10.10.0.233, eth2   <span class="m">← directo</span>
+traceroute → 2 saltos · ping <span class="g">3/3 · TTL 62</span>`;
+   const path=dead?['pa','a1','d1','core','d2','a2','pd']:['pa','a1','d1','d2','a2','pd'];animate(path,2800)};
+  document.getElementById('cut').onclick=()=>show(true);document.getElementById('rest').onclick=()=>show(false);
+  document.getElementById('ot').innerHTML='<span class="m">Pulsa cortar o restaurar.</span>\n\n<span class="m">OSPFv2 y OSPFv3: 6 relaciones de vecindad Full cada uno.</span>'}});
+
+S.push({k:'07 · IPv6',t:'Dual-stack<br>con SLAAC',
+ L:`<p>Prefijo <span class="mono">2001:db8:acad::/48</span>. Solo <b>VLAN 10 y 20</b> usan IPv6 (el mínimo pedido) más los tres enlaces entre routers, que <b>OSPFv3</b> anuncia.</p>
+ <p class="m">Con SLAAC el host recibe el prefijo del router (RA) y construye el resto con su MAC. Prueba con cualquier MAC:</p>
+ <div class="panel"><div class="kick">MAC del host</div><input type="text" id="mac" value="70:07:12:34:56:78"></div>`,
+ R:()=>`<div class="panel"><div class="kick">EUI-64 paso a paso (método de la sesión 17)</div><div id="sl"></div></div>
+ <div class="panel"><div class="kick">Lo que se ve en GNS3</div><div class="term">PC-ADMIN  <span class="g">2001:db8:acad:10:2050:79ff:fe66:6808/64</span>
+PC-DEV    <span class="g">2001:db8:acad:20:2050:79ff:fe66:6803/64</span>
+ping PC-ADMIN → PC-DEV: <span class="g">3/3</span> (OSPFv3 + SLAAC)
+
+<span class="a">Nota:</span> el VPCS de GNS3 escribe <span class="a">20</span> en vez de <span class="a">02</span> en el
+primer byte (invierte otro bit). El método estándar es el de arriba;
+es una particularidad del simulador, no del diseño.</div></div>`,
+ init(){const up=()=>{const m=document.getElementById('mac').value.trim().toLowerCase().replace(/[-.]/g,':').split(':');const o=document.getElementById('sl');
+  if(m.length!==6||m.some(x=>!/^[0-9a-f]{1,2}$/.test(x))){o.innerHTML='<span style="color:var(--red)">Formato: 70:07:12:34:56:78</span>';return}
+  const b=m.map(x=>x.padStart(2,'0'));const f=(parseInt(b[0],16)^2).toString(16).padStart(2,'0');const e=`${f+b[1]}:${b[2]}ff:fe${b[3]}:${b[4]+b[5]}`;
+  o.innerHTML=`<p class="m">1 · MAC</p><div class="bits">${b.map(x=>`<span class="bx">${x}</span>`).join('')}</div>
+  <p class="m" style="margin-top:10px">2 · insertar <b style="color:var(--mag)">ff:fe</b> en el medio</p><div class="bits">${b.slice(0,3).map(x=>`<span class="bx">${x}</span>`).join('')}<span class="bx hi">ff</span><span class="bx hi">fe</span>${b.slice(3).map(x=>`<span class="bx">${x}</span>`).join('')}</div>
+  <p class="m" style="margin-top:10px">3 · invertir el bit 7 del primer byte: ${b[0]} → <b style="color:var(--mag)">${f}</b></p><div class="bits"><span class="bx hi">${f}</span>${b.slice(1,3).map(x=>`<span class="bx">${x}</span>`).join('')}<span class="bx">ff</span><span class="bx">fe</span>${b.slice(3).map(x=>`<span class="bx">${x}</span>`).join('')}</div>
+  <p class="m" style="margin-top:10px">4 · link-local (FE80::/64) y global (prefijo del RA)</p><div class="term"><span class="a">fe80::${e}</span>\n<span class="g">2001:db8:acad:10:${e}/64</span></div>`};
+  document.getElementById('mac').oninput=up;up()}});
+
+S.push({k:'08 · SEGURIDAD',t:'Invitados:<br>separados y aislados',
+ L:`<p>Una VLAN y una subred propias <b>no bastan</b>: si el router enruta entre ellas, los invitados llegan a las redes internas. Así ocurrió en la primera corrida de pruebas.</p>
+ <p class="m">La regla en R-DIST1 (donde vive el gateway de la VLAN 80) descarta lo que entra por <span class="mono">eth0.80</span> hacia 10.10.0.0/24. Es el «bloquear tráfico entre VLANs» de la sesión 14.</p>
+ <button class="btn mag" id="fw">FIREWALL: APAGADO</button><div class="term"><span class="m">set firewall ipv4 forward filter</span>
+  rule 10 action drop
+  rule 10 inbound-interface name eth0.80
+  rule 10 destination address 10.10.0.0/24</div>`,
+ R:()=>`<div class="panel"><div class="kick">WIFI-INV 10.10.0.130 hace ping a…</div><table id="ft"></table></div>`,
+ init(){let on=false;const rows=[['Su gateway 10.10.0.129','T13',true],['TI 10.10.0.178','T07',false],['SERVIDORES 10.10.0.194','T14',false]];const draw=()=>{document.getElementById('fw').textContent='FIREWALL: '+(on?'ENCENDIDO':'APAGADO');
+  document.getElementById('ft').innerHTML='<tr><th>Destino</th><th>Prueba</th><th>Resultado</th></tr>'+rows.map(r=>{const ok=r[2]||!on;return`<tr><td>${r[0]}</td><td class="mono">${r[1]}</td><td><span class="tag ${ok?'ok':'bad'}">${ok?'RESPONDE':'BLOQUEADO'}</span></td></tr>`}).join('')};
+  document.getElementById('fw').onclick=()=>{on=!on;draw()};draw()}});
+
+const TESTS=[['T01','PC-ADMIN → 10.10.0.97','Host a su gateway',1],['T02','PC-ADMIN → 10.10.0.162','Inter-VLAN 10→30 (DIST1)',1],['T03','PC-ADMIN → 10.10.0.66','VLAN 10→20 entre routers (OSPF)',1],['T04','PC-DEV → 10.10.0.194','Inter-VLAN 20→50 (DIST2)',1],['T05','WIFI-CORP-1 → 10.10.0.1','VLAN 70 por el trunk T3 hasta su gateway',1],['T06','WIFI-CORP-1 → 10.10.0.3','Misma VLAN 70 a través del trunk',1],['T07','WIFI-INV → 10.10.0.178','Invitados → TI',0],['T08','IMPRESORA → 10.10.0.194','VLAN 60→50',1],['T09','PC-TI → 10.10.0.162','VLAN 40→30',1],['T10','PC-COM → 10.10.0.3','VLAN 30→70 (otro router)',1],['T11','PC-ADMIN → 2001:db8:acad:20:…','IPv6 VLAN 10→20 (SLAAC + OSPFv3)',1],['T12','PC-ADMIN → 2001:db8:acad:10::1','IPv6 host a su gateway',1],['T13','WIFI-INV → 10.10.0.129','Invitados a su gateway',1],['T14','WIFI-INV → 10.10.0.194','Invitados → SERVIDORES',0]];
+S.push({k:'09 · VERIFICACIÓN',t:'14 pruebas,<br>14 correctas',
+ L:`<div class="big">14/14</div><p>resultados como se diseñaron: <b>12 responden</b> y <b>2 deben quedar bloqueadas</b>.</p>
+ <p class="m">Antes de aplicar el aislamiento la corrida dio 12/12: los invitados sí llegaban a TI. La evidencia cruda está en el repositorio del proyecto.</p>
+ <button class="btn" data-f="all">TODAS</button><button class="btn" data-f="v4">IPv4</button><button class="btn mag" data-f="v6">IPv6</button><button class="btn red" data-f="bl">BLOQUEADAS</button>`,
+ R:()=>`<div class="panel"><table id="tt"></table></div>`,
+ init(){const draw=f=>{document.getElementById('tt').innerHTML='<tr><th>ID</th><th>Origen → destino</th><th>Demuestra</th><th>Esperado</th></tr>'+TESTS.filter(t=>f==='all'||(f==='v6'&&t[1].includes('2001'))||(f==='v4'&&!t[1].includes('2001'))||(f==='bl'&&!t[3])).map(t=>`<tr><td class="mono" style="color:var(--cyan)">${t[0]}</td><td class="mono">${t[1]}</td><td>${t[2]}</td><td><span class="tag ${t[3]?'ok':'bad'}">${t[3]?'✔ responde':'✖ bloqueado'}</span></td></tr>`).join('')};
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>draw(b.dataset.f));draw('all')}});
+
+S.push({k:'10 · TROUBLESHOOTING',t:'Fallas provocadas,<br>evidencia real',
+ L:`<p>Siempre el mismo método: <b>capa 1 → 2 → 3</b>. ¿Hay enlace? ¿Están en la misma VLAN? ¿Tienen ruta y gateway correcto?</p>
+ <p class="m">Elige una falla:</p><button class="btn" data-x="a">A · CAE UN ENLACE</button><button class="btn mag" data-x="b">B · GATEWAY ERRÓNEO</button><button class="btn red" data-x="c">C · SIN REGLA</button>`,
+ R:()=>`<div class="panel"><div class="term" id="tr" style="max-height:none">Elige A, B o C.</div></div>`,
+ init(){const T={a:`<span class="a">A · enlace R-DIST1 ↔ R-DIST2 caído</span>
+Antes    : 10.10.0.96/27 métrica 2 vía R-DIST1, TTL 62
+Falla    : métrica <span class="a">3</span> vía R-CORE, TTL 61, ping 5/5
+Después  : métrica 2 otra vez (adyacencia Full en 5.6 s)
+<span class="g">Conclusión: OSPF reencamina solo; el ping no se interrumpe.</span>`,
+b:`<span class="a">B · PC-COM con gateway 10.10.0.173 (no existe)</span>
+ping 10.10.0.161 (su gateway, misma subred)  <span class="g">responde</span>
+ping 10.10.0.98  (otra VLAN)                 <span class="r">host (10.10.0.173) not reachable</span>
+<span class="g">Diagnóstico: llega a su vecino pero no a otras redes → gateway mal puesto.</span>`,
+c:`<span class="a">C · antes de aplicar el aislamiento</span>
+corrida base: WIFI-INV → TI  <span class="r">RESPONDÍA</span> (12/12)
+regla de firewall en R-DIST1 → <span class="g">bloqueado</span> (T07, T14)
+<span class="g">Lección: VLAN + subred no aíslan si el router enruta entre ellas.</span>`};
+  document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>document.getElementById('tr').innerHTML=T[b.dataset.x])}});
+
+S.push({k:'11 · TRANSPARENCIA',t:'Límites y<br>cierre',
+ L:`<p>Lo decimos antes de que pregunten.</p><p class="m">Todo el proyecto — diseño, scripts, evidencia y documentación — está en el repositorio, y se puede reconstruir con los scripts.</p>`,
+ R:()=>`<div class="panel"><ul class="chk">${[['Supuestos de tamaño','Invitados (20), servidores (8), impresoras (3) y Wi-Fi corporativo (40) no venían en el enunciado. Cambian el VLSM, no el diseño.'],['Puntos de acceso no emulados','Se representan con el puerto de acceso de la VLAN y un cliente VPCS.'],['Trunks sin filtro','Los switches de GNS3 pasan todas las VLANs; la lista por trunk es el diseño.'],['Internet no se simula','El segundo corte no lo pide y las diapositivas no ven NAT.'],['COMERCIAL justa','Su /28 cubre el +30 % sin reserva extra.']].map(x=>`<li onclick="this.classList.toggle('on')"><div><b>${x[0]}</b><small>${x[1]}</small></div></li>`).join('')}</ul></div>
+ <div class="panel" style="text-align:center"><div class="kick">Gracias</div><h2 style="margin:0">¿Preguntas?</h2></div>`});
+
+/* ============ MOTOR ============ */
+const main=document.getElementById('main'),dots=document.getElementById('dots');let cur=0;
+S.forEach((s,i)=>{const d=document.createElement('button');d.textContent=i+1;d.onclick=()=>go(i);dots.appendChild(d);
+ const el=document.createElement('section');el.className='scene';el.id='s'+i;el.innerHTML=`<div><div class="kick">${s.k}</div>${i===0?'<h1>':'<h2>'}${s.t}${i===0?'</h1>':'</h2>'}${s.L}</div><div class="right">${s.R?s.R():''}</div>`;main.appendChild(el)});
+function go(i){i=Math.max(0,Math.min(S.length-1,i));cur=i;document.querySelectorAll('.scene').forEach((e,k)=>e.classList.toggle('on',k===i));
+ [...dots.children].forEach((d,k)=>{d.classList.toggle('on',k===i);d.classList.toggle('done',k<i)});document.getElementById('prog').style.width=((i+1)/S.length*100)+'%';
+ if(S[i].init&&!S[i]._i){S[i].init();S[i]._i=1}location.hash=i+1;document.getElementById('s'+i).scrollTop=0}
+document.getElementById('next').onclick=()=>go(cur+1);document.getElementById('prev').onclick=()=>go(cur-1);
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}if(['ArrowLeft','PageUp'].includes(e.key))go(cur-1);if(e.key==='Home')go(0);if(e.key==='End')go(S.length-1)});
+go((parseInt(location.hash.slice(1))||1)-1);
+
+/* fondo: red de particulas */
+(()=>{const c=document.getElementById('fx'),x=c.getContext('2d');let w,h,P=[];const rs=()=>{w=c.width=innerWidth;h=c.height=innerHeight;P=Array.from({length:Math.min(70,Math.floor(w*h/22000))},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35}))};rs();addEventListener('resize',rs);
+ (function t(){x.clearRect(0,0,w,h);P.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;x.fillStyle='rgba(61,226,255,.8)';x.fillRect(p.x,p.y,2,2);for(let j=i+1;j<P.length;j++){const d=Math.hypot(p.x-P[j].x,p.y-P[j].y);if(d<140){x.strokeStyle='rgba(61,226,255,'+(.22*(1-d/140))+')';x.beginPath();x.moveTo(p.x,p.y);x.lineTo(P[j].x,P[j].y);x.stroke()}}});requestAnimationFrame(t)})()})();
+</script>
+</body>
+</html>

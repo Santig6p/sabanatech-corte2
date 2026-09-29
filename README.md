@@ -1,134 +1,537 @@
-# SabanaTech · Segundo corte — presentación interactiva
+# Guía de sustentación — SabanaTech, segundo corte (GNS3)
 
-Página web para exponer el segundo corte paso a paso. Es un solo archivo (`index.html`), sin instalación ni dependencias.
+Guía paso a paso para **sustentar el proyecto en vivo**: el profesor ve el proyecto funcionando y tú explicas mientras usas los comandos.
+Cada paso dice **qué hacer** (dónde pulsar), **qué decir**, los **comandos** y trae una **captura** de lo que debes ver.
 
-**Enlace:** https://santig6p.github.io/sabanatech-corte2/
+- Versión interactiva (un botón por paso que despliega la captura): abrir `index.html` (o la página publicada en GitHub Pages).
+- Este archivo trae lo mismo en texto, para leerlo o imprimirlo.
+- Página de apoyo visual opcional: `explicar.html`.
 
-## Cómo se maneja
+## Índice
 
-| Acción | Qué hace |
-|---|---|
-| Flecha derecha, `Espacio` o botón **SIGUIENTE** | Siguiente escena |
-| Flecha izquierda o botón **ANTERIOR** | Escena anterior |
-| Círculos numerados de arriba | Saltar a cualquier escena (la barra de arriba muestra el avance) |
-| `Inicio` / `Fin` | Primera / última escena |
-| Clic en cualquier elemento | Cada escena tiene algo que se toca; abajo dice qué |
+**Antes de empezar**
+- Prepara el computador (5 min antes)
 
-La dirección de la página recuerda la escena (`#7` = escena 7), así que puedes abrir una escena concreta.
+**Abrir el proyecto**
+- Abre GNS3 (~1 min)
+- Espera a que arranque la GNS3 VM (~1 min)
+- Elige el proyecto SabanaTech-Corte2 (~30 s)
+- Enciende toda la red (~3 min de espera)
 
-**Consejos antes de empezar**
-- Ábrela en pantalla completa (`F11`) y prueba el enlace en el computador que vas a usar, con Internet (las tipografías vienen de Google Fonts; sin Internet funciona igual con otra letra).
-- Ten GNS3 abierto aparte con el proyecto encendido, por si el profesor pide ver algo en vivo (comandos al final).
-- Duración: unos 12–15 minutos si nadie interrumpe. Reparte las escenas entre los tres integrantes.
+**Explicar la red**
+- Explica la topología (mientras arrancan) (~2 min)
 
----
+**Demostrar que funciona**
+- Abre la consola de R-DIST1 e inicia sesión (~1 min)
+- OSPF: los vecinos (~1 min)
+- OSPF: las rutas que aprendió (~1 min)
+- IPv6: vecinos y rutas OSPFv3 (~1 min 30 s)
+- Inter-VLAN: las subinterfaces (~1 min)
+- Prueba entre VLANs desde un computador (~1 min 30 s)
+- Invitados aislados por firewall (~2 min)
+- Convergencia: tumba un enlace y mira cómo OSPF se recupera (~4 min)
+- Opcional: ver la etiqueta 802.1Q con Wireshark (~3 min)
+- Apaga todo al terminar (~1 min)
 
-## Guion escena por escena
+**Cómo se hizo y por qué**
+- Qué nos pedían y con qué herramientas (~1 min)
+- Cómo se diseñó (~2 min)
+- Cómo se construyó (~1 min 30 s)
+- Problemas que encontramos y cómo los resolvimos (~1 min 30 s)
+- Lo que no hicimos (límites honestos) (~1 min)
 
-Las frases entre comillas son una propuesta: dilas con tus palabras. **TOCA** es lo que debes pulsar; **SEÑALA** es lo que debes mostrar con el cursor.
-
-### Escena 1 — Portada (≈ 1 min)
-**Qué se ve:** título y la lista de lo que pide el segundo corte; los ítems se marcan solos.
-**TOCA:** nada. Deja que se marquen los ocho ítems.
-**DI:** «Presentamos el segundo corte del proyecto de SabanaTech. Partimos de la red de Bogotá del primer corte, de unos cincuenta empleados, y la evolucionamos: la segmentamos con VLANs, la enrutamos de forma dinámica con OSPF y le agregamos IPv6 con dual-stack. Todo está implementado y probado en GNS3 con routers VyOS.»
-**SEÑALA:** la lista de la derecha: «estos ocho puntos son exactamente lo que pide la diapositiva del segundo corte, y ahora vamos a ver cómo cumplimos cada uno».
-
-### Escena 2 — Segmentación: 8 VLANs (≈ 2 min)
-**Qué se ve:** ocho tarjetas de VLAN y una tabla con la justificación.
-**TOCA:** la tarjeta **10**, luego la **70**, luego la **80**. Cada una muestra quién la usa, por qué y en qué router está su gateway.
-**DI:** «Dividimos en ocho VLANs. La pregunta de la sesión 13 era si invitados, finanzas, gerencia y desarrollo pueden compartir segmento; la respuesta es no. Solo juntamos Management con Finanzas y Recursos Humanos en la VLAN 10, porque son las dos áreas administrativas con las mismas funciones y separarlas gastaría una VLAN y un bloque sin ganar aislamiento real. Desarrollo, Comercial y TI van cada una en su VLAN. Servidores y áreas comunes con impresoras tienen red dedicada porque son recursos compartidos. Y el Wi-Fi se representa con dos VLANs: la corporativa, la 70, y la de invitados, la 80.»
-**SEÑALA:** la columna «Decisión» de la tabla. Si preguntan por qué los IDs son esos: «el enunciado no los prescribe; usamos los mismos números que los laboratorios del curso».
-
-### Escena 3 — VLSM sobre 10.10.0.0/24 (≈ 2 min)
-**Qué se ve:** una barra a escala del /24 con un bloque por VLAN, una tabla y una calculadora.
-**TOCA:** el bloque más grande de la barra (WIFI-CORP), luego uno pequeño (COMERCIAL). Después escribe en la calculadora `10.10.0.98/27` (PC-ADMIN) y cambia el prefijo a `/28` para ver cómo cambia la red.
-**DI:** «Usamos VLSM sobre el bloque 10.10.0.0/24, que sale del ejercicio 3 de la sesión 9: el /22 dividido en cuatro sedes, y Bogotá se queda con el primer /24. Ordenamos los grupos de mayor a menor y a cada uno le damos el bloque más pequeño que le cabe. A cada cifra le sumamos el treinta por ciento de crecimiento y una dirección para el gateway. Por ejemplo, Wi-Fi corporativo tiene cuarenta dispositivos; con el treinta por ciento son cincuenta y dos, más el gateway, y por eso necesita un /26 de sesenta y dos hosts. El gateway siempre es el primer host utilizable.»
-**SEÑALA:** el bloque gris «libre» del final: «nos sobran veinte direcciones para crecer». Y en la barra, los tres bloques oscuros: «los tres enlaces /30 entre routers».
-**Si preguntan:** «¿por qué /30 en los enlaces?» → «porque solo hay dos extremos; un /30 tiene exactamente dos hosts».
-
-### Escena 4 — Topología (≈ 1 min 30 s)
-**Qué se ve:** el diagrama con tres routers, dos switches y nueve hosts.
-**TOCA:** R-CORE, R-DIST1, ASW-1 y un host (por ejemplo PC-ADMIN). Cada uno muestra su papel y sus direcciones.
-**DI:** «La topología tiene tres routers VyOS: un núcleo y dos de distribución; dos switches de acceso y nueve hosts, uno por VLAN y dos en el Wi-Fi corporativo para probar esa VLAN entre switches. Es lo mínimo que cumple "varios dispositivos de capa 3" y "más de un switch", y además el computador tiene 7,8 gigas de RAM, así que no gastamos recursos de más.»
-**SEÑALA:** los colores: «cian es enlace enrutado, ámbar es trunk, gris es acceso». Al tocar R-DIST1: «aquí viven los gateways de las VLAN 10, 30, 60 y 80».
-
-### Escena 5 — Switching y trunks (≈ 2 min)
-**Qué se ve:** tres tarjetas de trunk, el formato de la trama 802.1Q y la tabla de puertos de acceso.
-**TOCA:** T1, T2 y sobre todo **T3**.
-**DI:** «Un puerto de acceso pertenece a una sola VLAN y el host ni sabe de 802.1Q. Un trunk lleva varias VLANs por un mismo cable poniéndole a la trama la etiqueta 802.1Q, cuyo VLAN ID tiene doce bits. Tenemos tres trunks: T1 y T2 llevan las cuatro VLANs de cada router de distribución, y T3 une los dos switches para la VLAN 70. ¿Por qué? Porque el Wi-Fi corporativo tiene que cubrir los dos pisos y su gateway está en R-DIST2; así WIFI-CORP-1, que está en el piso de ASW-1, llega a su gateway por T3.»
-**SEÑALA:** en la tarjeta del formato de trama, la parte resaltada «TAG 802.1Q». En la tabla, las filas de la VLAN 70 en ambos switches.
-**Dilo con honestidad:** «los switches de GNS3 no filtran VLANs por trunk, así que la lista de cada trunk es el diseño, no una restricción del switch».
-
-### Escena 6 — Inter-VLAN (≈ 2 min)
-**Qué se ve:** la topología y un botón para lanzar un ping.
-**TOCA:** **LANZAR PING PC-ADMIN → PC-DEV** y mira la esfera magenta recorrer el camino.
-**DI:** «Cada VLAN es una subinterfaz 802.1Q del router, como eth0.10 o eth0.20, y el router es el gateway de la VLAN: esa es la frontera de capa 3. Cuando PC-ADMIN, en la VLAN 10, le hace ping a PC-DEV, en la 20, el paquete sube por el trunk, R-DIST1 lo enruta por OSPF hacia R-DIST2, y baja por la VLAN 20. Dos VLANs distintas no se hablan si no hay un router en medio.»
-**SEÑALA:** el camino resaltado en verde y, en el cuadro de texto, el TTL 62: «el TTL baja cuando cruza un router».
-
-### Escena 7 — OSPF y convergencia (≈ 2 min 30 s) ★ vale el 30 %
-**Qué se ve:** la topología, botones de cortar y restaurar, y una consola con la ruta.
-**TOCA:** primero mira el estado inicial (**RESTAURAR**). Luego **CORTAR ENLACE DIST1↔DIST2** y observa la línea roja y el paquete yendo por R-CORE. Después **RESTAURAR**.
-**DI:** «Usamos OSPFv2 en el área cero con los router-IDs 1.1.1.1, 2.2.2.2 y 3.3.3.3. Con tres routers no hace falta dividir en áreas. Cada router anuncia las redes conectadas y forma adyacencias Full con sus vecinos: son seis adyacencias en OSPFv2 y otras seis en OSPFv3. Ahora cortamos el enlace directo entre los dos routers de distribución: la ruta a la VLAN 10 pasa de métrica dos, directa, a métrica tres, por R-CORE, y el ping sigue funcionando sin que hayamos tocado ninguna ruta. Eso es convergencia. Al restaurar el enlace, la adyacencia vuelve a formarse y se recupera el camino corto.»
-**SEÑALA:** en la consola el cambio `[110/2]` → `[110/3]` y el TTL 62 → 61.
-**Si preguntan:** «¿por qué un solo área?» → «la sesión 15 dice que varias áreas se usan cuando hay cientos de routers; aquí serían complejidad sin beneficio». «¿qué es el 110?» → «la distancia administrativa de OSPF».
-
-### Escena 8 — IPv6 y SLAAC (≈ 2 min) ★ vale el 25 %
-**Qué se ve:** un cuadro con una MAC editable y el paso a paso del EUI-64.
-**TOCA:** en el campo de MAC, cambia algunos dígitos y mira cómo se recalcula todo. Usa `70:07:12:34:56:78`, la del ejemplo de la clase.
-**DI:** «Usamos el prefijo 2001:db8:acad::/48. Solo las VLANs 10 y 20 tienen IPv6, que es el mínimo que pide el enunciado, más los tres enlaces entre routers, que OSPFv3 anuncia. IPv4 e IPv6 conviven en las mismas interfaces: eso es dual-stack. Los hosts no se configuran a mano: usan SLAAC. Reciben el prefijo del router en un mensaje RA y arman el resto con su MAC: insertan FF:FE en el medio, invierten el bit siete del primer byte y ya tienen su identificador de interfaz. Con eso forman la dirección link-local, la global, y hacen DAD para verificar que no esté repetida.»
-**SEÑALA:** los pasos 2 y 3 (lo que se resalta en magenta).
-**Dilo con honestidad (importante):** el recuadro inferior muestra las direcciones reales. En GNS3 el VPCS escribe `20` en vez de `02` en el primer byte, y por eso ves `2050:79ff:…` y no `0250:79ff:…`. «Es una particularidad del simulador; el método correcto es el de la animación.»
-
-### Escena 9 — Invitados aislados (≈ 1 min 30 s)
-**Qué se ve:** un interruptor de firewall y una tabla de tres pruebas.
-**TOCA:** el botón **FIREWALL** para encender y apagar; los resultados cambian.
-**DI:** «Tener una VLAN y una subred propias para los invitados no basta: si el router enruta entre ellas, los invitados llegan a las redes internas. Nos pasó en la primera corrida de pruebas, los invitados alcanzaban TI. Por eso en R-DIST1, que es donde está el gateway de la VLAN 80, pusimos una regla que descarta todo lo que entra por eth0.80 hacia 10.10.0.0/24. Es el "bloquear tráfico entre VLANs" del laboratorio de la sesión 14. Ojo: el ping a su propio gateway sigue funcionando, porque ese tráfico no se reenvía.»
-**SEÑALA:** la fila «Su gateway» siempre en verde, y las otras dos en rojo al encender.
-**Dilo con honestidad:** las diapositivas piden bloquear tráfico entre VLANs pero no muestran el comando; usamos la sintaxis de VyOS.
-
-### Escena 10 — Pruebas (≈ 1 min)
-**Qué se ve:** los 14 resultados y cuatro filtros.
-**TOCA:** **IPv6**, luego **BLOQUEADAS**, luego **TODAS**.
-**DI:** «Hicimos catorce pruebas y todas dieron lo esperado: doce deben responder y dos deben quedar bloqueadas. Las repetimos después de apagar todo y volver a abrir el proyecto, para comprobar que las configuraciones quedaron guardadas.»
-**SEÑALA:** T05 y T06: «prueban que la VLAN 70 cruza el trunk entre switches». T11: «IPv6 entre dos redes distintas».
-
-### Escena 11 — Troubleshooting (≈ 1 min 30 s) ★ vale el 15 %
-**Qué se ve:** tres botones de fallas.
-**TOCA:** **A**, **B** y **C** por orden.
-**DI:** «Siempre seguimos el mismo método: capa uno, capa dos, capa tres. ¿Hay enlace? ¿Están en la misma VLAN? ¿Tienen ruta y gateway correcto? En la falla B, PC-COM llega a su gateway pero no a otra VLAN: ese síntoma, llegar al vecino pero no a otras redes, apunta a un gateway mal puesto, no a un cable ni a un switch.»
-**SEÑALA:** en la B, las dos líneas de ping: «una responde y la otra no, y la diferencia es cruzar o no el router».
-
-### Escena 12 — Límites y cierre (≈ 1 min)
-**TOCA:** marca cada límite al mencionarlo.
-**DI:** «Antes de que pregunten: los números de invitados, servidores, impresoras y Wi-Fi corporativo no venían en el enunciado, los supusimos y están marcados; cambian el VLSM, no el diseño. Los puntos de acceso no se emulan. Los trunks de GNS3 no filtran VLANs. Internet no se simula porque el segundo corte no lo pide. Y la subred de Comercial cubre el treinta por ciento sin reserva extra. Gracias, quedamos atentos a preguntas.»
+**Si algo falla**
+- Si algo falla en plena sustentación (referencia)
 
 ---
 
-## Si el profesor pide ver algo en vivo en GNS3
+## Parte A · Antes de empezar
 
-Enciende el proyecto `SabanaTech-Corte2`, espera unos 3 minutos y abre la consola de cada router (login `vyos` / `vyos`).
+### Paso 1 — Prepara el computador · 5 min antes
 
-| Quiero mostrar… | Comando en el router |
-|---|---|
-| Vecinos OSPFv2 (deben estar en `Full`) | `show ip ospf neighbor` |
-| Vecinos OSPFv3 | `show ipv6 ospfv3 neighbor` |
-| Rutas aprendidas por OSPF | `show ip route ospf` |
-| Rutas IPv6 | `show ipv6 route` |
-| Interfaces y direcciones | `show interfaces` |
-| Ruta hacia una red | `show ip route 10.10.0.96/27` |
-| Camino real de un paquete | `traceroute 10.10.0.98` |
-| Regla de aislamiento (solo R-DIST1) | `show configuration commands \| match firewall` |
+**Qué hacer**
 
-En un host VPCS: `show ip`, `show ipv6`, `ping 10.10.0.66`. Para provocar la falla de convergencia: clic derecho sobre el enlace R-DIST1 ↔ R-DIST2 → *Suspend* (y *Resume* para restaurar).
+1. Conecta el cargador. Las máquinas virtuales gastan mucha batería.
+2. Cierra Chrome, Teams, Packet Tracer y todo lo que no uses: el portátil tiene 7,8 GB de RAM y con el proyecto encendido queda casi al límite.
+3. Abre **esta guía en tu celular** (o en otra pantalla). Así la lees mientras el computador muestra solo GNS3 al profesor.
+4. Comprueba que el portátil no se va a suspender: pon el brillo alto y desactiva el protector de pantalla.
 
-## Contenido del repositorio
+> **Nota:** Si el profesor va a ver la pantalla, deja solo GNS3 abierto. Esta guía es solo para ti.
 
-| Archivo | Qué es |
-|---|---|
-| `index.html` | La presentación (todo el código en un archivo) |
-| `README.md` | Este guion |
-
-El proyecto completo (documentación, scripts y evidencias) está en el equipo del grupo; este repositorio contiene solo la presentación.
 
 ---
-*Última actualización: 2026-09-29.*
+
+## Parte B · Abrir el proyecto
+
+### Paso 2 — Abre GNS3 · ~1 min
+
+**Qué hacer**
+
+1. En el **Escritorio** de Windows busca el ícono azul-verde con un camaleón que dice **GNS3** (está marcado en rojo en la captura).
+2. Haz **doble clic** sobre él.
+3. No abras VMware por separado: GNS3 lo hace solo.
+
+**Qué decir**
+
+> Vamos a abrir el proyecto tal como quedó guardado, empezando desde cero, para demostrar que todo se puede reconstruir.
+
+![El ícono «GNS3» del escritorio, marcado en rojo.](assets/p01_escritorio.jpg)
+*El ícono «GNS3» del escritorio, marcado en rojo.*
+
+> **Nota:** Si no ves el ícono: tecla Windows, escribe «GNS3» y pulsa Enter.
+
+
+### Paso 3 — Espera a que arranque la GNS3 VM · ~1 min
+
+**Qué hacer**
+
+1. Al abrir GNS3 aparece **sola** una ventana de VMware que dice «GNS3 VM - VMware Workstation». Es normal: **no la cierres**.
+2. Espera a que aparezca una pantalla azul que dice «GNS3 server version 2.2.61» y una IP (192.168.155.128). Eso significa que la máquina virtual ya está lista.
+3. Vuelve a GNS3: clic en su ícono de la barra de tareas (abajo). Si quieres, minimiza VMware con el guion «—» de la esquina superior derecha.
+
+**Qué decir**
+
+> GNS3 tiene dos partes: la interfaz que vemos en Windows y un servidor que corre dentro de una máquina virtual en VMware. Los routers VyOS corren en esa máquina virtual.
+
+![La ventana de VMware con la GNS3 VM arrancando. El guion de la esquina la minimiza.](assets/p03_vmware_vm.jpg)
+*La ventana de VMware con la GNS3 VM arrancando. El guion de la esquina la minimiza.*
+
+![Pantalla azul: la GNS3 VM está lista.](assets/p04_vm_lista.jpg)
+*Pantalla azul: la GNS3 VM está lista.*
+
+> **Nota:** Toda la sesión anterior confirmó que esto pasa solo. No apagues ni pauses esa máquina virtual.
+
+
+### Paso 4 — Elige el proyecto SabanaTech-Corte2 · ~30 s
+
+**Qué hacer**
+
+1. En GNS3 verás un cuadro llamado **Project**. Abajo, en «Open project», pulsa **Recent projects…**.
+2. Elige **1. SabanaTech-Corte2.gns3**.
+3. Mira el panel de la derecha («Servers Summary»): debe mostrar círculos **verdes** en «GNS3 VM» y en el equipo. Si dice «is starting», espera unos segundos.
+
+![El cuadro «Project»: arriba a la derecha el estado del servidor, abajo el botón de abrir proyectos.](assets/p02_dialogo_proyecto.jpg)
+*El cuadro «Project»: arriba a la derecha el estado del servidor, abajo el botón de abrir proyectos.*
+
+![Recent projects → SabanaTech-Corte2.gns3.](assets/p05_proyectos_recientes.jpg)
+*Recent projects → SabanaTech-Corte2.gns3.*
+
+> **Nota:** Alternativa: en «Open a project from disk» busca C:\Users\ssaan\GNS3\projects\06320af0-9383-40d2-973d-acc6edf8a3ba\SabanaTech-Corte2.gns3
+
+
+### Paso 5 — Enciende toda la red · ~3 min de espera
+
+**Qué hacer**
+
+1. El proyecto se abre con todos los equipos **apagados** (cuadritos rojos).
+2. Pulsa el botón verde **▶ (Start/Resume all)** de la barra de herramientas.
+3. Confirma con **Yes** en «Are you sure you want to start all devices?».
+4. Todos los cuadritos pasan a verde. Los routers **tardan unos 3 minutos** en terminar de arrancar (la CPU de la GNS3 VM marca casi 100 % mientras tanto).
+
+**Qué decir**
+
+> Estamos encendiendo los tres routers, los dos switches y los nueve computadores. Mientras terminan de arrancar les explico la red.
+
+![Proyecto cargado, todo apagado. El botón ▶ está marcado.](assets/p06_proyecto_apagado.jpg)
+*Proyecto cargado, todo apagado. El botón ▶ está marcado.*
+
+![Confirmación: Yes.](assets/p07_confirmar_inicio.jpg)
+*Confirmación: Yes.*
+
+![Todos los nodos en verde; la CPU de la VM alta indica que los routers están arrancando.](assets/p08_nodos_encendidos.jpg)
+*Todos los nodos en verde; la CPU de la VM alta indica que los routers están arrancando.*
+
+> **Nota:** Aprovecha estos 3 minutos para el paso siguiente. No abras consolas todavía.
+
+
+---
+
+## Parte C · Explicar la red
+
+### Paso 6 — Explica la topología (mientras arrancan) · ~2 min
+
+**Qué hacer**
+
+1. **Señala con el cursor**, en este orden: R-CORE (arriba) → R-DIST1 (izquierda) → R-DIST2 (derecha) → ASW-1 y ASW-2 (los dos switches) → los hosts de abajo.
+2. Explica los colores de los enlaces con el dedo/cursor: los tres enlaces entre routers son enrutados; los que bajan a los switches son trunks; los de los hosts son puertos de acceso.
+3. Si quieres apoyo visual, abre en otra ventana la página de apoyo: **explicar.html** (trae el mismo diagrama interactivo).
+
+**Qué decir**
+
+> La red tiene tres routers: R-CORE en el núcleo y dos de distribución, R-DIST1 y R-DIST2. Cada router de distribución se conecta por un cable a un switch de acceso; los dos switches también están unidos entre sí. De cada switch cuelgan los computadores, uno por VLAN. En total son ocho VLANs y el bloque 10.10.0.0/24 está repartido con VLSM. R-DIST1 es el gateway de las VLAN 10, 30, 60 y 80; R-DIST2 es el de la 20, 40, 50 y 70. Usamos tres routers porque el enunciado pide varios dispositivos de capa 3, y no más porque el portátil solo tiene 7,8 gigas de RAM.
+
+![La topología ya encendida, con los tres routers marcados.](assets/p09_topologia_encendida.jpg)
+*La topología ya encendida, con los tres routers marcados.*
+
+> **Nota:** Datos para tener a mano: VLAN 10 ADMIN, 20 DESARROLLO, 30 COMERCIAL, 40 TI, 50 SERVIDORES, 60 COMUN, 70 WIFI-CORP, 80 INVITADOS.
+
+
+---
+
+## Parte D · Demostrar que funciona
+
+### Paso 7 — Abre la consola de R-DIST1 e inicia sesión · ~1 min
+
+**Qué hacer**
+
+1. **Doble clic sobre el ícono del router R-DIST1** en el diagrama (no sobre el texto).
+2. Se abre una ventana negra llamada **Solar-PuTTY** con una pestaña «R-DIST1». Si es la primera vez que la ves, es el terminal del router.
+3. Espera hasta ver la línea **R-DIST1 login:** (abajo). Si aún salen mensajes, el router no terminó de arrancar: espera un poco más.
+4. Escribe `vyos` y Enter. Luego, cuando pida Password, escribe `vyos` y Enter (no se ve al escribir).
+5. Verás «Welcome to VyOS!» y el prompt **vyos@R-DIST1:~$**.
+
+**Comandos**
+
+```
+vyos
+vyos
+```
+
+**Qué decir**
+
+> Cada router es un VyOS, un sistema de enrutamiento de código abierto. Entramos a su consola con el usuario y la clave por defecto.
+
+![Pantalla de login de R-DIST1.](assets/p09_consola_login.jpg)
+*Pantalla de login de R-DIST1.*
+
+![Login correcto: «Welcome to VyOS!» y el prompt.](assets/p10_login_ok.jpg)
+*Login correcto: «Welcome to VyOS!» y el prompt.*
+
+> **Nota:** **IMPORTANTE:** nunca escribas `clear` solo (VyOS dice «Incomplete command» y el terminal se comporta raro). Para limpiar la pantalla usa Ctrl+L. Escribe **despacio** y espera el prompt antes del siguiente comando: estos routers son lentos.
+
+
+### Paso 8 — OSPF: los vecinos · ~1 min
+
+**Qué hacer**
+
+1. En la consola de R-DIST1 escribe el comando y pulsa Enter.
+2. Mira la columna **State**: deben decir **Full** los dos vecinos (1.1.1.1 y 3.3.3.3).
+3. **Señala** con el cursor las dos líneas «Full» (marcadas en rojo en la captura).
+
+**Comandos**
+
+```
+show ip ospf neighbor
+```
+
+**Qué decir**
+
+> Este comando lista los vecinos OSPF. R-DIST1 tiene dos: el 1.1.1.1, que es R-CORE, y el 3.3.3.3, que es R-DIST2. El estado Full significa que ya intercambiaron toda la información de la red y están sincronizados. Para que dos routers sean vecinos deben coincidir en área, en los temporizadores Hello y Dead y en la subred del enlace; aquí todos usan el área cero. Cada uno de los tres routers ve dos vecinos, así que en total son seis relaciones de vecindad.
+
+![Dos vecinos en estado Full.](assets/p11_ospf_vecinos.jpg)
+*Dos vecinos en estado Full.*
+
+> **Nota:** Si sale menos de 2 vecinos, espera 30 segundos y repite: aún están convergiendo.
+
+
+### Paso 9 — OSPF: las rutas que aprendió · ~1 min
+
+**Qué hacer**
+
+1. Escribe el comando.
+2. Fíjate en las líneas que empiezan con **O>*** (rutas aprendidas por OSPF) y en las que dicen «is directly connected» (redes propias).
+3. **Señala** la línea de **10.10.0.64/27** (la VLAN 20 de DESARROLLO): dice `[110/2] via 10.10.0.234, eth2`.
+
+**Comandos**
+
+```
+show ip route ospf
+```
+
+**Qué decir**
+
+> Aquí están las rutas que R-DIST1 aprendió dinámicamente. La red 10.10.0.64/27, que es la VLAN de Desarrollo, no está en este router: la aprendió de R-DIST2 por OSPF, a través de la interfaz eth2, con costo 2. El 110 es la distancia administrativa de OSPF. No hay ninguna ruta estática en toda la red.
+
+![Rutas OSPF de R-DIST1; la de 10.10.0.64/27 va por eth2 con costo 2.](assets/p12_ospf_rutas.jpg)
+*Rutas OSPF de R-DIST1; la de 10.10.0.64/27 va por eth2 con costo 2.*
+
+> **Nota:** Si pregunta «¿y las rutas estáticas?»: no hay; todo lo anuncia OSPF.
+
+
+### Paso 10 — IPv6: vecinos y rutas OSPFv3 · ~1 min 30 s
+
+**Qué hacer**
+
+1. Escribe el primer comando y **señala** los dos vecinos en Full.
+2. Escribe el segundo y **señala** la línea de **2001:db8:acad:20::/64**: es la VLAN 20 en IPv6, aprendida de R-DIST2.
+
+**Comandos**
+
+```
+show ipv6 ospfv3 neighbor
+show ipv6 route ospfv3
+```
+
+**Qué decir**
+
+> Lo mismo pero para IPv6 con OSPFv3: mismos vecinos, misma cantidad de vecinos. La red IPv6 de Desarrollo, 2001:db8:acad:20, también llegó por OSPF. Es dual-stack: cada interfaz tiene dirección IPv4 e IPv6 a la vez. Solo las VLAN 10 y 20 usan IPv6, que es el mínimo que pide el enunciado, más los tres enlaces entre routers.
+
+![Vecinos OSPFv3 en Full.](assets/p13_ospfv3_vecinos.jpg)
+*Vecinos OSPFv3 en Full.*
+
+![Rutas IPv6 aprendidas por OSPFv3.](assets/p14_ipv6_rutas.jpg)
+*Rutas IPv6 aprendidas por OSPFv3.*
+
+> **Nota:** El prefijo es 2001:db8:acad::/48 (el mismo del laboratorio de la sesión 18); cada VLAN usa un /64.
+
+
+### Paso 11 — Inter-VLAN: las subinterfaces · ~1 min
+
+**Qué hacer**
+
+1. Escribe el comando. (El `| no-more` evita que la lista se pagine; si algún día sale un `:` al final, pulsa **q**.)
+2. **Señala** las cuatro líneas **eth0.10, eth0.30, eth0.60 y eth0.80**: son las VLAN 10, 30, 60 y 80.
+3. Señala **eth0**: no tiene IP porque es el trunk físico hacia ASW-1.
+
+**Comandos**
+
+```
+show interfaces | no-more
+```
+
+**Qué decir**
+
+> Este es el enrutamiento inter-VLAN. Por el único cable que va al switch ASW-1 viajan cuatro VLANs, y el router las separa con subinterfaces 802.1Q: eth0.10, eth0.30, eth0.60 y eth0.80. Cada subinterfaz es el gateway de su VLAN y tiene su propia dirección IPv4; la de la VLAN 10 además tiene IPv6. Esa es la frontera de capa 3: para pasar de una VLAN a otra el paquete tiene que subir al router.
+
+![Las subinterfaces de R-DIST1, una por VLAN.](assets/p15_interfaces.jpg)
+*Las subinterfaces de R-DIST1, una por VLAN.*
+
+> **Nota:** Diferencia VLAN vs subred: la VLAN separa en capa 2; la subred es el direccionamiento de capa 3. Aquí van 1 a 1.
+
+
+### Paso 12 — Prueba entre VLANs desde un computador · ~1 min 30 s
+
+**Qué hacer**
+
+1. **Doble clic** sobre el computador **PC-ADMIN** (abajo a la izquierda). Se abre otra pestaña en Solar-PuTTY.
+2. Escribe los comandos uno por uno (con el prompt **VPCS>**).
+3. El ping debe dar 3 respuestas con **ttl=62**. **Señala** el ttl.
+
+**Comandos**
+
+```
+show ip
+ping 10.10.0.66
+show ipv6
+```
+
+**Qué decir**
+
+> PC-ADMIN está en la VLAN 10, con la IP 10.10.0.98. Le hago ping a 10.10.0.66, que es PC-DEV, en la VLAN 20: otra red, en otro switch y detrás de otro router. Responde. El TTL baja de 64 a 62 porque el paquete cruzó dos routers, R-DIST1 y R-DIST2. En IPv6, este computador obtuvo su dirección solo, por SLAAC: recibió el prefijo del router y construyó el resto con su dirección MAC.
+
+![Arriba la dirección IPv6 por SLAAC, en medio la IPv4, abajo el ping entre VLANs con ttl=62.](assets/p23_host_pcadmin.jpg)
+*Arriba la dirección IPv6 por SLAAC, en medio la IPv4, abajo el ping entre VLANs con ttl=62.*
+
+> **Nota:** La dirección IPv6 del VPCS escribe «20» en vez de «02» en el primer byte (2050:79ff:…). Es una particularidad del simulador; el método estándar EUI-64 daría 0250:79ff:…
+
+
+### Paso 13 — Invitados aislados por firewall · ~2 min
+
+**Qué hacer**
+
+1. En la pestaña de **R-DIST1** escribe el primer comando y **señala** las líneas `action drop` y `inbound-interface name eth0.80`.
+2. Ahora abre el computador **WIFI-INV** (doble clic) y escribe los tres pings.
+3. El primero (su gateway) **responde**; el segundo y el tercero dan **timeout**. Señálalos.
+
+**Comandos**
+
+```
+show configuration commands | match firewall | no-more
+ping 10.10.0.129
+ping 10.10.0.178
+ping 10.10.0.194
+```
+
+**Qué decir**
+
+> Tener una VLAN y una subred propias para los invitados no basta: si el router enruta entre ellas, los invitados llegan a la red interna. En nuestra primera prueba pasaba exactamente eso. Por eso, en R-DIST1, donde está el gateway de la VLAN 80, pusimos una regla que descarta todo lo que entra por eth0.80 y va hacia 10.10.0.0/24. Este computador de invitados sí llega a su propio gateway, la .129, pero no a TI ni a Servidores: quedan bloqueados. Es el «bloquear tráfico entre VLANs» del laboratorio de la sesión 14.
+
+![La regla de firewall en R-DIST1.](assets/p16_firewall.jpg)
+*La regla de firewall en R-DIST1.*
+
+![Desde WIFI-INV: su gateway responde; TI y Servidores, bloqueados.](assets/p24_invitados_bloqueados.jpg)
+*Desde WIFI-INV: su gateway responde; TI y Servidores, bloqueados.*
+
+> **Nota:** Sé honesto: las diapositivas piden bloquear tráfico entre VLANs pero no muestran el comando; usamos la sintaxis de VyOS.
+
+
+### Paso 14 — Convergencia: tumba un enlace y mira cómo OSPF se recupera · ~4 min
+
+**Qué hacer**
+
+1. **Antes de tumbar:** en la pestaña de R-DIST1 escribe `traceroute 10.10.0.66`. Son **2 saltos**: 10.10.0.234 (R-DIST2) y el destino.
+2. Vuelve a GNS3. Haz **clic derecho sobre la línea** que une R-DIST1 con R-DIST2 (la horizontal del medio) y elige **Suspend**. Aparece un ícono amarillo de pausa.
+3. Espera unos 10–20 segundos. En R-DIST1 escribe `show ip route 10.10.0.64/27`: ahora dice **metric 3** y sale por **10.10.0.225** (R-CORE).
+4. Escribe otra vez `traceroute 10.10.0.66`: ahora son **3 saltos** (pasa por R-CORE). Y el ping de PC-ADMIN a PC-DEV sigue funcionando.
+5. **Restaura:** clic derecho sobre el mismo enlace → **Resume**. En unos segundos vuelve el camino de 2 saltos.
+
+**Comandos**
+
+```
+traceroute 10.10.0.66
+show ip route 10.10.0.64/27
+```
+
+**Qué decir**
+
+> Ahora probamos qué pasa si falla un enlace. Con todo activo, para llegar de R-DIST1 a R-DIST2 hay un camino directo de dos saltos. Desconectamos ese cable. Sin tocar ninguna configuración, OSPF detecta la falla, recalcula, y la ruta cambia: ahora el costo es 3 y va por R-CORE. El traceroute muestra tres saltos y la comunicación no se interrumpe. Eso es convergencia, y por eso la topología tiene los tres enlaces entre routers y no solo un árbol. Al restaurar el enlace, la adyacencia vuelve a formarse y regresa el camino corto.
+
+![Antes: 2 saltos.](assets/p17_traceroute_normal.jpg)
+*Antes: 2 saltos.*
+
+![Clic derecho sobre el enlace: aparece el menú (Suspend).](assets/p18_menu_enlace.jpg)
+*Clic derecho sobre el enlace: aparece el menú (Suspend).*
+
+![El enlace suspendido (ícono amarillo de pausa).](assets/p19_enlace_suspendido.jpg)
+*El enlace suspendido (ícono amarillo de pausa).*
+
+![Después: métrica 3 por 10.10.0.225 (R-CORE).](assets/p20_ruta_alterna.jpg)
+*Después: métrica 3 por 10.10.0.225 (R-CORE).*
+
+![Después: 3 saltos.](assets/p21_traceroute_alterno.jpg)
+*Después: 3 saltos.*
+
+![Resume restaura el enlace.](assets/p22_reanudar_enlace.jpg)
+*Resume restaura el enlace.*
+
+> **Nota:** Este es el paso que más vale (OSPF y convergencia = 30 % de la nota). Ensáyalo al menos dos veces.
+
+
+### Paso 15 — Opcional: ver la etiqueta 802.1Q con Wireshark · ~3 min
+
+**Qué hacer**
+
+1. **Solo si hay tiempo y el computador aguanta** (Wireshark gasta RAM extra).
+2. Clic derecho sobre el cable entre **R-DIST1 y ASW-1** (el vertical de la izquierda) → **Start capture** → deja «Ethernet» → **OK**. Se abre Wireshark.
+3. Vuelve al PC-ADMIN y lanza `ping 10.10.0.66`.
+4. En Wireshark pulsa cualquier paquete y despliega la fila **802.1Q Virtual LAN**: verás «ID: 20» o «ID: 30». Señálala.
+5. Al terminar: botón rojo ■ de Wireshark, cierra la ventana y elige «Salir sin guardar». Si Wireshark pregunta por actualizar: «Recordármelo más tarde».
+
+**Comandos**
+
+```
+ping 10.10.0.66
+```
+
+**Qué decir**
+
+> Aquí vemos el trunk por dentro. Estamos capturando en el cable entre R-DIST1 y el switch. Cada trama lleva la etiqueta 802.1Q y ahí vemos el VLAN ID: 20, 30… Así es como un solo cable transporta varias VLANs sin mezclarlas. El laboratorio de la sesión 14 pedía justamente analizar el tráfico del trunk con Wireshark.
+
+![Start capture sobre el enlace.](assets/p25_menu_captura.jpg)
+*Start capture sobre el enlace.*
+
+![Cuadro de captura: OK.](assets/p26_dialogo_captura.jpg)
+*Cuadro de captura: OK.*
+
+![Wireshark: la fila 802.1Q Virtual LAN muestra el VLAN ID.](assets/p27_wireshark_8021q.jpg)
+*Wireshark: la fila 802.1Q Virtual LAN muestra el VLAN ID.*
+
+> **Nota:** Si el portátil se pone lento, salta este paso: no es obligatorio.
+
+
+### Paso 16 — Apaga todo al terminar · ~1 min
+
+**Qué hacer**
+
+1. En GNS3 pulsa el botón rojo **■ (Stop all)** y confirma con **Yes**.
+2. Cierra las consolas Solar-PuTTY y cierra GNS3 (la X de la esquina). La GNS3 VM se apaga sola al salir.
+
+**Qué decir**
+
+> Apagamos toda la red. Toda la configuración quedó guardada dentro de cada router, así que al volver a encenderla todo regresa igual; lo comprobamos apagando y reabriendo el proyecto, y las catorce pruebas dieron lo esperado.
+
+![Stop all → Yes.](assets/p28_detener_todo.jpg)
+*Stop all → Yes.*
+
+
+---
+
+## Parte E · Cómo se hizo y por qué
+
+### Paso 17 — Qué nos pedían y con qué herramientas · ~1 min
+
+**Qué decir**
+
+> Las diapositivas del segundo corte pedían ocho cosas: VLSM, VLANs justificadas, trunks, inter-VLAN, varios dispositivos de capa tres, OSPF, IPv6 con dual-stack y GNS3 como plataforma. Usamos GNS3 con routers VyOS, exactamente como el laboratorio de la sesión 12, porque VyOS es un enrutador real de código abierto y admite todo lo pedido: subinterfaces, OSPFv2, OSPFv3 y anuncios de router para IPv6. La GNS3 VM corre en VMware porque los routers VyOS son máquinas QEMU y necesitan virtualización. Los switches son los de GNS3, que soportan puertos de acceso y trunks 802.1Q, y los computadores son VPCS, que consumen casi nada de memoria.
+
+**Por qué se hizo así**
+
+- **¿Por qué VyOS y no otro router?** Es el que usa el curso (sesión 12) y admite todo el temario sin licencias.
+- **¿Por qué solo 3 routers?** Es el mínimo que cumple «múltiples dispositivos de capa 3» y da una topología con camino alterno. El portátil tiene 7,8 GB de RAM: cada router usa 512 MB.
+- **¿Por qué VPCS para los computadores?** Consumen unos pocos MB, permiten ping, IPv6 automático y guardar la configuración.
+
+
+### Paso 18 — Cómo se diseñó · ~2 min
+
+**Qué decir**
+
+> Primero segmentamos: ocho VLANs, una por necesidad. Management y Finanzas comparten VLAN porque son las dos áreas administrativas; Servidores y Áreas comunes son recursos compartidos y van aparte; el Wi-Fi corporativo y el de invitados también. Luego direccionamos con VLSM sobre 10.10.0.0/24, que es el primer bloque del ejercicio tres de la sesión nueve. Aplicamos las reglas de la clase: ordenar de mayor a menor, sumar el treinta por ciento de crecimiento más una dirección para el gateway, y usar el bloque más pequeño que cabe. Después armamos la topología: dos routers de distribución y uno de núcleo, dos switches de acceso, y un tercer trunk entre los switches solo para la VLAN 70, porque el Wi-Fi corporativo cubre los dos pisos y su gateway está en R-DIST2. Por último, IPv6 con el prefijo 2001:db8:acad, solo en las VLAN 10 y 20, y OSPFv3 para anunciarlas.
+
+**Por qué se hizo así**
+
+- **¿Por qué esos tamaños?** Wi-Fi corporativo: 40 dispositivos → 52 con el 30 % → +1 gateway = 53 → necesita 62 hosts → un /26. Desarrollo: 18 → 24 → 25 → /27. Comercial: 10 → 13 → 14 → /28 (justo).
+- **¿Por qué números supuestos?** El enunciado no da los invitados, servidores, impresoras ni Wi-Fi corporativo. Los supusimos (20, 8, 3 y 40) y están marcados; si el profesor da otros, se recalcula el VLSM sin cambiar el diseño.
+- **¿Por qué las VLAN son 10, 20, 30…?** El enunciado no prescribe los números; usamos los mismos de los laboratorios del curso para que el diseño sea legible.
+- **¿Por qué un solo área OSPF?** Con 3 routers no hace falta dividir; la sesión 15 explica que las áreas múltiples son para redes grandes.
+- **¿Por qué solo VLAN 10 y 20 con IPv6?** Es el mínimo pedido («al menos dos áreas, en redes distintas») y no gastamos direcciones ni configuración de más.
+
+
+### Paso 19 — Cómo se construyó · ~1 min 30 s
+
+**Qué decir**
+
+> La red no se armó a clics: se construyó con scripts que hablan con la API de GNS3, así que se puede reconstruir igual cuantas veces se quiera. Un script crea el proyecto, los routers, los switches, los computadores y los enlaces. Otro configura cada router con comandos VyOS: subinterfaces con vif, direcciones IPv4 e IPv6, OSPF con las redes de cada router, el anuncio de router para SLAAC y la regla de firewall. Otro configura los computadores. Y otro ejecuta las catorce pruebas y guarda la evidencia. Todo quedó documentado en archivos de texto con el porqué de cada decisión.
+
+**Por qué se hizo así**
+
+- **¿Por qué scripts?** Reproducibilidad: si algo se daña, se reconstruye en minutos; y queda evidencia exacta de qué se configuró.
+- **¿Qué comandos de VyOS se usaron?** set interfaces ethernet eth0 vif 10 address …  ·  set protocols ospf area 0 network …  ·  set protocols ospfv3 interface … area 0  ·  set service router-advert interface eth0.10 prefix …  ·  set firewall ipv4 forward filter rule 10 …  ·  commit  ·  save
+- **¿Por qué commit y save?** commit aplica el cambio; save lo guarda en disco. Sin save se pierde al apagar.
+
+
+### Paso 20 — Problemas que encontramos y cómo los resolvimos · ~1 min 30 s
+
+**Qué decir**
+
+> Nos pasaron varias cosas que conviene contar. Los routers VyOS numeraban sus tarjetas de red en orden aleatorio, entonces la configuración fallaba porque eth0 no existía; lo resolvimos renombrando cada interfaz según su dirección MAC antes de configurar. La imagen base traía interfaces de una sesión anterior; hicimos una copia limpia. En la primera corrida de pruebas los invitados llegaban a la red interna y por eso agregamos la regla de firewall. Y al principio nuestro contador de pings solo reconocía respuestas IPv4 y marcaba fallido el IPv6 aunque funcionaba; lo corregimos y repetimos la corrida.
+
+**Por qué se hizo así**
+
+- **Interfaces en desorden** VyOS numera las NIC por detección; se renombran por MAC (ip link set … name ethN) y se fija hw-id con set interfaces ethernet ethN hw-id.
+- **Invitados llegaban a TI** Corrida base 12/12; con la regla, T07 y T14 quedan bloqueadas como se diseñó.
+- **Pruebas IPv6 marcadas como fallidas** El contador buscaba «bytes from» (IPv4) y no «icmp6_seq» (IPv6). Se corrigió y se repitió.
+- **Persistencia** Se apagó, cerró y reabrió el proyecto y se repitieron las 14 pruebas: 14/14 y 6 adyacencias OSPF por protocolo.
+
+
+### Paso 21 — Lo que no hicimos (límites honestos) · ~1 min
+
+**Qué decir**
+
+> Para terminar, lo que no hicimos y por qué. No simulamos los puntos de acceso Wi-Fi: los representamos con el puerto de acceso de la VLAN y un cliente. Los switches de GNS3 no filtran VLANs por trunk, así que la lista de VLANs de cada trunk es el diseño. No hay salida a Internet porque el segundo corte no la pide y las diapositivas no ven NAT. Los números de invitados, servidores, impresoras y Wi-Fi corporativo son supuestos. Y la subred de Comercial cubre el treinta por ciento de crecimiento sin reserva adicional.
+
+**Por qué se hizo así**
+
+- **Puntos de acceso** No se emulan en GNS3; se representan con puertos de acceso en VLAN 70/80.
+- **Trunks sin filtro** El switch de GNS3 deja pasar todas las VLANs por un dot1q.
+- **Internet** Fuera del alcance del segundo corte; no se vio NAT.
+
+
+---
+
+## Parte F · Si algo falla
+
+### Paso 22 — Si algo falla en plena sustentación · referencia
+
+| Qué pasa | Por qué | Qué hacer |
+|---|---|---|
+| Escribo y no aparece nada, o sale «^M» | El router es lento y descarta lo que se teclea justo después del prompt. | Espera 5 segundos, no pulses Enter varias veces y vuelve a escribir. Si sigue, cierra esa pestaña de Solar-PuTTY y abre otra con doble clic en el router. |
+| `show ip ospf neighbor` muestra menos de 2 vecinos | El router aún está convergiendo, o falta encender algo. | Espera 30–60 s y repite. Comprueba que todos los nodos estén en verde. |
+| Solar-PuTTY muestra la consola en blanco | El router aún arranca. | Espera hasta ver «login:». Los routers tardan ~3 min. |
+| Un router no responde nunca | Poca memoria en el portátil. | Cierra programas (Chrome, Teams). Usa otro router para el comando; la mayoría de los `show` se pueden ver desde R-DIST1 o R-DIST2. |
+| GNS3 dice que el servidor no conecta ("GNS3 VM is starting" eterno) | La máquina virtual no arrancó. | Revisa que VMware siga abierto y la ventana «GNS3 VM» muestre la pantalla azul. Si no, cierra GNS3 y ábrelo de nuevo. |
+| Un ping que debería responder falla | La red aún no converge, o el router se reinició. | Repite tras 30 s. Si sigue, `show ip route` y `show ip ospf neighbor` en el router más cercano. |
+| Escribí `clear` y se trabó el terminal | En VyOS `clear` solo es un comando incompleto. | Cierra la pestaña y abre otra consola. Para limpiar pantalla usa Ctrl+L. |
+| El profesor quiere ver la configuración de un router | — | `show configuration commands | no-more` (todo) o `| match ospf` / `| match vif` para filtrar. |
+
+> **Nota:** Si el profesor introduce una falla: NO cambies nada al azar. Di qué capa sospechas (1 física, 2 VLAN, 3 red), qué comando lo confirma y qué esperas ver.
+
